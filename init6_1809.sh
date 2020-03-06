@@ -41,7 +41,7 @@ cat >> /etc/security/limits.conf << EOF
 * soft nofile 65534
 * hard nofile 65534
 EOF
-
+sed -i 's/4096/65534/' /etc/security/limits.d/20-nproc.conf
 echo "ulimit -SHn 65534" >> /etc/profile
 
 # Change kernel parameters;
