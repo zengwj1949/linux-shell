@@ -31,7 +31,7 @@ yum install -y lrzsz sysstat elinks wget net-tools bash-completion tree nmap vim
 yum -y update
 
 # Time synchronization;
-/usr/bin/update -u ntp.aliyun.com && /sbin/hwclock -w
+/usr/sbin/ntpdate -u ntp.aliyun.com && /sbin/hwclock -w
 sleep 3
 
 # Change File descriptor
