@@ -37,3 +37,4 @@ export PROMPT_COMMAND='\
 # 简单来说就是调用方法/函数
 # 调试所用，具体可以看看trap用法
 log2file
+
