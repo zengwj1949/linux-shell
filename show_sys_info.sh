@@ -32,6 +32,8 @@ HOST_INFO () {
 }
 
 CPU_USE () {
+	lscpu | egrep "CPU|Core" | awk 'NR==4 {print $0}'
+	lscpu | egrep "CPU|Core" | awk 'NR==2 {print $0}'
 	uptime | awk -F ':' '{print $5}'
 }
 
