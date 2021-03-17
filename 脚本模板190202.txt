@@ -1,0 +1,58 @@
+
+建立脚本模板：moban.sh
+
+#!/bin/bash
+
+if [ $# -ne 1 ]; then
+	echo "Usage `basename $0` script-name"
+	exit 99
+fi
+cat > $1 << end
+#!/usr/bin/env bash
+
+#########################################################
+# Name: $1
+# Date: `date "+%F %T"`
+# Author: zwj
+# Mail: 2962372861@qq.com
+# Function: $1
+# Version: 1.1
+#########################################################
+
+set -e
+
+
+end
+vim +14 $1
+
+
+#############关于read的使用#############
+
+read：用于等待用户的输入，可以建立交互式脚本。
+
+  例 1：
+
+if read -t 5 -p "Enter your name: " name
+        then
+          echo "Hello! $name welcome to my script"
+else
+          echo
+          echo "Sorry,it is too time"
+fi
+
+
+  例 2：
+
+if read -t 5 -s -p "Enter your password: " password
+        then
+          echo
+          echo "This is your $password"
+        else
+          echo
+          echo "This is too time"
+fi
+
+备注：-t 用于指定时间
+
+      -s 用于隐藏输入文字
+
