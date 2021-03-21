@@ -1,0 +1,99 @@
+#!groovy
+
+pipeline {
+    agent {node {label 'master'}}
+    
+    environment {
+        def PASSWD = credentials('9b495860-9cb4-4d9e-a756-49f618159bd1')
+        def GIT_ADDR = 'git@172.16.1.252:/data/repo/solo'
+        backdirrm="$WORKSPACE/backup"
+    }
+
+    parameters {
+	choice (
+	    choices: 'deploy\nrollback',
+	    description: 'choose deploy or rollback',
+	    name: 'devploy_env'
+	)
+	string (name: 'version', defaultValue: '0', description: '回滚的版本号，发布时忽略该参数')
+    }
+    
+    stages {
+        stage ('Get Code') {
+            steps {
+                sh 'pwd'
+                dir ("${env.WORKSPACE}") {
+                    git branch:'master',  url: "${GIT_ADDR}"
+                }
+            }
+        }
+
+        stage ('Maven Build') {
+            steps {
+                sh 'mvn clean package -Dmaven.test.skip=true'
+                sh '''
+                set +x
+                backdir="$WORKSPACE/backup/${BUILD_NUMBER}"
+                if [ -d ${backdir} ]
+                then
+                    echo "This backdir is exists."
+                else
+                    mkdir -pv ${backdir}
+                fi
+                cp -f ${WORKSPACE}/target/*.war ${backdir} \
+                && echo "This ${BUILD_NUMBER} backup is ok."
+                set -x 
+                '''
+            }
+        }
+
+        stage ('Prod Deploy') {
+            steps {
+                sh 'pwd'
+                script {
+                    if ("${devploy_env}" == "deploy") {
+                    sh 'cd /data/ansible/roles/deploy && ansible-playbook deploy.yaml'
+                    }
+                }
+            }
+        }
+       
+        stage ('Prod Rollback') {
+            steps {
+                script {
+                    if ("${devploy_env}" == "rollback") {
+                    echo 'Prod Rollback ......'
+                    sh '''
+                    set +x
+                    echo "Rollback Version: ${version}"
+                    cp -f $WORKSPACE/backup/${version}/*.war $WORKSPACE/target  \
+                    && cd /data/ansible/roles/deploy && ansible-playbook deploy.yaml
+                    set -x
+                    '''
+                    }
+                }
+            }
+        }
+
+        stage ('Test') {
+            steps {
+                sh 'echo "Test"'
+            }
+        }
+    }
+
+    post {
+        success {
+            script {
+                sh '''
+                set +x
+                echo "${backdirrm}"
+                cd ${backdirrm} \
+                && find . -type d -mmin +50 | xargs rm -fr 
+                pwd
+                set -x
+                '''
+            }
+        }
+    }
+}
